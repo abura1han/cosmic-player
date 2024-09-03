@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "declaration": true, // Generate declaration files (.d.ts)
+    "declarationDir": "dist/types", // Output directory for declarations
+    "outDir": "dist" // Output directory for compiled files
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
