@@ -1,44 +1,30 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from "@ffmpeg/util";
 import React, { useEffect, useRef, useState } from "react";
+import { fetchPartialVideo } from "./utils/load";
 
 export interface CosmicPlayerProps {
   videoSrc: string;
 }
 
-// Function to fetch a portion of the video using byte range requests
-const fetchPartialVideo = async (
-  url: string,
-  startByte: number,
-  endByte: number
-): Promise<Uint8Array> => {
-  const response = await fetch(url, {
-    headers: {
-      Range: `bytes=${startByte}-${endByte}`, // Request specific byte range
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch video segment: ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  return new Uint8Array(arrayBuffer); // Convert to Uint8Array for FFmpeg
-};
-
 const CosmicPlayer: React.FC<CosmicPlayerProps> = ({ videoSrc }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const loadingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [frames, setFrames] = useState<string[]>([]);
   const [currentSegment, setCurrentSegment] = useState(0); // Track video segment
   const ffmpegRef = useRef<FFmpeg>(new FFmpeg());
   const messageRef = useRef<HTMLDivElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const animationRef = useRef<number | null>(null);
+  let angle = 0;
 
   // Segment duration in seconds (adjustable)
   const SEGMENT_DURATION = 3; // Adjust this value to change segment duration
   const BYTES_PER_SECOND = 500000; // Approximate video bitrate in bytes per second
 
   const loadSegment = async (startTime: number) => {
+    setIsLoading(true);
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     const ffmpeg = ffmpegRef.current;
 
@@ -98,9 +84,38 @@ const CosmicPlayer: React.FC<CosmicPlayerProps> = ({ videoSrc }) => {
       }
 
       setFrames((prevFrames) => [...prevFrames, ...loadedFrames]); // Append new frames
+      setIsLoading(false);
     } catch (error) {
       console.error("Failed to load FFmpeg segment:", error);
+      setIsLoading(false);
     }
+  };
+
+  const drawLoader = (ctx: CanvasRenderingContext2D, angle: number) => {
+    const centerX = ctx.canvas.width / 2;
+    const centerY = ctx.canvas.height / 2;
+    const radius = 40;
+    const lineWidth = 8;
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Draw the circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, angle, angle + Math.PI * 1.5);
+    ctx.strokeStyle = "#3498db";
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.stroke();
+  };
+
+  const animateLoader = (ctx: CanvasRenderingContext2D) => {
+    drawLoader(ctx, angle);
+    angle += 0.05; // Adjust the rotation speed
+    if (angle >= 2 * Math.PI) {
+      angle = 0; // Reset the angle after a full rotation
+    }
+    animationRef.current = requestAnimationFrame(() => animateLoader(ctx));
   };
 
   useEffect(() => {
@@ -142,8 +157,34 @@ const CosmicPlayer: React.FC<CosmicPlayerProps> = ({ videoSrc }) => {
     }
   }, [isPlaying, frames]);
 
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const canvas = loadingCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        animateLoader(ctx);
+      }
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current); // Clean up the animation on component unmount
+      }
+    };
+  }, [isLoading]);
+
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      {isLoading && (
+        <canvas
+          ref={loadingCanvasRef}
+          width={640}
+          height={360}
+          style={{ border: "1px solid black", position: "absolute", top: 0, left: 0 }}
+        ></canvas>
+      )}
       <canvas
         ref={canvasRef}
         width={640}
@@ -161,4 +202,3 @@ const CosmicPlayer: React.FC<CosmicPlayerProps> = ({ videoSrc }) => {
 };
 
 export default CosmicPlayer;
-
