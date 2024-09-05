@@ -21,6 +21,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@types/react-dom": "^18.3.0",
     "cosmic-player": "file:.yalc/cosmic-player"
   }

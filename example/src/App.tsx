@@ -3,7 +3,7 @@ import './App.css'
 function App() {
   return (
     <>
-      <CosmicPlayer text="Hello World" />
+      <CosmicPlayer videoSrc="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" />
     </>
   )
 }

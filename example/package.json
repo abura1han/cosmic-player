@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "cosmic-player": "file:../node_modules/cosmic-player",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "cosmic-player": "file:.yalc/cosmic-player"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
